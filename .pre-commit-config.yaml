@@ -1,0 +1,68 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-xml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-symlinks
+
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.11.0
+    hooks:
+      - id: pretty-format-java
+        args: [--autofix]
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: https://github.com/gherynos/pre-commit-java
+    rev: v0.2.1
+    hooks:
+      - id: pmd
+        args: ['-R', 'rulesets/java/quickstart.xml']
+      - id: checkstyle
+        args: ['-c', 'google_checks.xml']
+
+  - repo: local
+    hooks:
+      - id: forbid-debug-commits
+        name: Check for debug statements
+        entry: '(System\.out\.println|console\.log|debugger|alert\()'
+        language: pygrep
+        types: [java, javascript, typescript]
+
+      - id: maven-verify
+        name: Run maven verify
+        entry: ./mvnw verify -DskipTests
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+
+      - id: maven-test
+        name: Run maven test
+        entry: ./mvnw test
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+
+      - id: trivy-scan
+        name: Scan container image
+        entry: trivy image myorg/microservice-template:latest
+        language: system
+        pass_filenames: false
+        stages: [push]
+        verbose: true

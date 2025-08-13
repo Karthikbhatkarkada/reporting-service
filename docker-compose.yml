@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Microservice Application
+  microservice:
+    build:
+      context: .
+    container_name: microservice-template
+    ports:
+      - "8080:8080"
+    environment:
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/microservice_db
+      - QUARKUS_DATASOURCE_USERNAME=postgres
+      - QUARKUS_DATASOURCE_PASSWORD=postgres
+      - QUARKUS_OIDC_AUTH-SERVER-URL=http://keycloak:8080/auth/realms/microservice-realm
+      - QUARKUS_REDIS_HOSTS=redis://redis:6379
+      - QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14250/api/traces
+    depends_on:
+      - postgres
+      - keycloak
+      - redis
+      - jaeger
+      - prometheus
+      - grafana
+      - loki
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14
+    container_name: microservice-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=microservice_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # Keycloak for Authentication and Authorization
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: microservice-keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+    command: start-dev
+    ports:
+      - "8180:8080"
+    depends_on:
+      - postgres
+
+  # Redis for Caching
+  redis:
+    image: redis:7.0
+    container_name: microservice-redis
+    ports:
+      - "6379:6379"
+
+  # Jaeger for Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.46
+    container_name: microservice-jaeger
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14250:14250"
+      - "14268:14268"
+      - "14269:14269"
+      - "9411:9411"
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: microservice-prometheus
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+
+  # Grafana for Metrics Visualization
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: microservice-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
+  # Loki for Log Aggregation
+  loki:
+    image: grafana/loki:2.8.4
+    container_name: microservice-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # Promtail for Log Collection
+  promtail:
+    image: grafana/promtail:2.8.4
+    container_name: microservice-promtail
+    volumes:
+      - /var/log:/var/log
+      - ./config/promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+
+volumes:
+  postgres-data:
+  grafana-data:

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "oracle.jdbc.driver.OracleDriver",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "oracle.jdbc.proxy.ProxyFactory",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "oracle.jdbc.proxy.ClassGenerator",
+    "allDeclaredMethods": true
+  }
+]

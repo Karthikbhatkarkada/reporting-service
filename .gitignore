@@ -1,0 +1,170 @@
+# Styra Platform Service - Standard .gitignore
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# IDE - Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# IDE - NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# IDE - VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+*.log.*
+log4j.properties
+
+# Quarkus
+.quarkus/
+quarkus.log
+
+# Native builds
+*-runner
+*-runner.exe
+
+# Environment and configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+h2/
+
+# Cache and temporary files
+.cache/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Package files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Docker
+.dockerignore
+Dockerfile.jvm
+
+Dockerfile.fast-jar
+
+# Build artifacts
+dist/
+build/
+*.tgz
+
+# Secrets and keys
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.truststore
+secrets/
+credentials/
+
+# Coverage reports
+jacoco.exec
+*.lcov
+coverage/
+.nyc_output/
+
+# Dependency directories
+.m2/repository/
+
+# JRebel
+rebel.xml
+
+# SonarQube
+.sonar/
+.scannerwork/
+
+# JProfiler
+*.jfr
+
+# Gradle (if used)
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Other
+*.orig
+*.rej
+*conflicted*

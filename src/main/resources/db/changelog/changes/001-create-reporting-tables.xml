@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Create reports table -->
+    <changeSet id="001-create-reports-table" author="system">
+        <createTable tableName="reports">
+            <!-- Primary Key -->
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Business Fields -->
+            <column name="report_code" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="report_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(1000)"/>
+            <column name="category" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="report_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="output_format" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="frequency" type="varchar(20)"/>
+            <column name="is_scheduled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_public" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requires_approval" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="query_template" type="${text.type}"/>
+            <column name="last_run_date" type="timestamp"/>
+            <column name="next_run_date" type="timestamp"/>
+            <column name="execution_time_seconds" type="int"/>
+            <column name="owner_user_id" type="bigint"/>
+            <column name="business_unit_id" type="bigint"/>
+
+            <!-- JSON columns for dynamic data -->
+            <column name="parameters_schema" type="${jsonb.type}"/>
+            <column name="config" type="${jsonb.type}"/>
+            <column name="layout_config" type="${jsonb.type}"/>
+            <column name="access_control" type="${jsonb.type}"/>
+            <column name="schedule_config" type="${jsonb.type}"/>
+
+            <!-- Audit Fields -->
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="timestamp"/>
+            <column name="created_by" type="bigint"/>
+            <column name="modified_by" type="bigint"/>
+            <column name="version" type="int" defaultValueNumeric="0"/>
+            <column name="is_deleted" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create indexes for reports table -->
+        <createIndex tableName="reports" indexName="idx_reports_code">
+            <column name="report_code"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_category">
+            <column name="category"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_is_scheduled">
+            <column name="is_scheduled"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_is_public">
+            <column name="is_public"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_owner">
+            <column name="owner_user_id"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_business_unit">
+            <column name="business_unit_id"/>
+        </createIndex>
+        <createIndex tableName="reports" indexName="idx_reports_is_deleted">
+            <column name="is_deleted"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create report_schedules table -->
+    <changeSet id="002-create-report-schedules-table" author="system">
+        <createTable tableName="report_schedules">
+            <!-- Primary Key -->
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Foreign Keys -->
+            <column name="report_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Business Fields -->
+            <column name="schedule_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(500)"/>
+            <column name="cron_expression" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timezone" type="varchar(50)" defaultValue="UTC">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="timestamp"/>
+            <column name="last_run_date" type="timestamp"/>
+            <column name="next_run_date" type="timestamp"/>
+            <column name="last_run_status" type="varchar(20)"/>
+            <column name="run_count" type="int" defaultValueNumeric="0"/>
+            <column name="success_count" type="int" defaultValueNumeric="0"/>
+            <column name="failure_count" type="int" defaultValueNumeric="0"/>
+            <column name="output_format" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_retries" type="int" defaultValueNumeric="3"/>
+            <column name="retry_count" type="int" defaultValueNumeric="0"/>
+
+            <!-- JSON columns for dynamic data -->
+            <column name="schedule_parameters" type="${jsonb.type}"/>
+            <column name="distribution_list" type="${jsonb.type}"/>
+            <column name="notification_config" type="${jsonb.type}"/>
+            <column name="error_config" type="${jsonb.type}"/>
+
+            <!-- Audit Fields -->
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="timestamp"/>
+            <column name="created_by" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="bigint"/>
+            <column name="version" type="int" defaultValueNumeric="0"/>
+            <column name="is_deleted" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create foreign key constraint -->
+        <addForeignKeyConstraint 
+            baseTableName="report_schedules" 
+            baseColumnNames="report_id"
+            referencedTableName="reports" 
+            referencedColumnNames="id"
+            constraintName="fk_report_schedules_report"/>
+
+        <!-- Create indexes for report_schedules table -->
+        <createIndex tableName="report_schedules" indexName="idx_report_schedules_report">
+            <column name="report_id"/>
+        </createIndex>
+        <createIndex tableName="report_schedules" indexName="idx_report_schedules_is_active">
+            <column name="is_active"/>
+        </createIndex>
+        <createIndex tableName="report_schedules" indexName="idx_report_schedules_next_run">
+            <column name="next_run_date"/>
+        </createIndex>
+        <createIndex tableName="report_schedules" indexName="idx_report_schedules_created_by">
+            <column name="created_by"/>
+        </createIndex>
+        <createIndex tableName="report_schedules" indexName="idx_report_schedules_is_deleted">
+            <column name="is_deleted"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create report_executions table -->
+    <changeSet id="003-create-report-executions-table" author="system">
+        <createTable tableName="report_executions">
+            <!-- Primary Key -->
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Foreign Keys -->
+            <column name="report_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Business Fields -->
+            <column name="execution_id" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="requested_by" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="execution_status" type="varchar(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_date" type="timestamp"/>
+            <column name="completed_date" type="timestamp"/>
+            <column name="execution_time_seconds" type="int"/>
+            <column name="output_format" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="varchar(255)"/>
+            <column name="file_path" type="varchar(500)"/>
+            <column name="file_size_bytes" type="bigint"/>
+            <column name="record_count" type="int"/>
+            <column name="error_message" type="${text.type}"/>
+            <column name="is_scheduled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_sent" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="download_count" type="int" defaultValueNumeric="0"/>
+            <column name="last_downloaded_date" type="timestamp"/>
+            <column name="expiry_date" type="timestamp"/>
+
+            <!-- JSON columns for dynamic data -->
+            <column name="execution_parameters" type="${jsonb.type}"/>
+            <column name="execution_metadata" type="${jsonb.type}"/>
+            <column name="execution_stats" type="${jsonb.type}"/>
+
+            <!-- Audit Fields -->
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="timestamp"/>
+            <column name="created_by" type="bigint"/>
+            <column name="modified_by" type="bigint"/>
+            <column name="version" type="int" defaultValueNumeric="0"/>
+            <column name="is_deleted" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create foreign key constraint -->
+        <addForeignKeyConstraint 
+            baseTableName="report_executions" 
+            baseColumnNames="report_id"
+            referencedTableName="reports" 
+            referencedColumnNames="id"
+            constraintName="fk_report_executions_report"/>
+
+        <!-- Create indexes for report_executions table -->
+        <createIndex tableName="report_executions" indexName="idx_report_executions_report">
+            <column name="report_id"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_execution_id">
+            <column name="execution_id"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_status">
+            <column name="execution_status"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_requested_by">
+            <column name="requested_by"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_is_scheduled">
+            <column name="is_scheduled"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_created_date">
+            <column name="created_date"/>
+        </createIndex>
+        <createIndex tableName="report_executions" indexName="idx_report_executions_is_deleted">
+            <column name="is_deleted"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

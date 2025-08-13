@@ -1,0 +1,43 @@
+# Multi-stage Dockerfile for Quarkus native builds
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+
+WORKDIR /code
+
+# Copy parent POM first (better caching)
+COPY parent/pom.xml /code/parent/pom.xml
+RUN cd parent && mvn install -N -B -q
+
+# Copy and build styra-common dependency first
+COPY styra-common /code/styra-common
+WORKDIR /code/styra-common
+RUN mvn clean install -DskipTests -B -q
+
+# Copy service files and build 
+ARG SERVICE_NAME
+COPY ${SERVICE_NAME} /code/service
+WORKDIR /code/service
+RUN mvn clean package -Dnative -DskipTests -B
+
+# Runtime stage
+FROM quay.io/quarkus/quarkus-micro-image:2.0
+
+WORKDIR /work/
+
+# Copy the native executable
+COPY --from=build --chown=1001:root /code/service/target/*-runner /work/application
+
+# Set permissions
+RUN chmod 775 /work/application
+
+# Expose port
+EXPOSE 8080
+
+# Set user
+USER 1001
+
+# Health check (using wget since curl might not be available)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/q/health || exit 1
+
+# Run the application
+ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]

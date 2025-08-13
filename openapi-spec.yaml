@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: Reporting Service API
+  description: REST API for generating reports and analytics
+  version: 1.0.0
+  contact:
+    name: Styra Platform Team
+    email: api-support@styra.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://localhost:8097
+    description: Local development server
+paths:
+  /api/v1/reports/health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the reporting service
+      operationId: getReportingHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  service:
+                    type: string
+                    example: "reporting-service"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-01-24 10:30:45"
+  
+  /api/v1/reports:
+    get:
+      tags:
+        - Reports
+      summary: Get reports endpoint
+      description: Basic endpoint to confirm reports service is working
+      operationId: getReports
+      responses:
+        '200':
+          description: Service is working
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Reports endpoint working"
+                  service:
+                    type: string
+                    example: "reporting-service"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    
+    ServiceResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        service:
+          type: string

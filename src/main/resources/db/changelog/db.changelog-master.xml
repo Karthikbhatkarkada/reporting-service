@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Property for JSONB type based on database -->
+    <property name="jsonb.type" value="jsonb" dbms="postgresql"/>
+    <property name="jsonb.type" value="json" dbms="mysql,mariadb"/>
+    <property name="jsonb.type" value="clob" dbms="oracle,h2"/>
+    
+    <!-- Property for text type based on database -->
+    <property name="text.type" value="text" dbms="postgresql,mysql,mariadb"/>
+    <property name="text.type" value="clob" dbms="oracle"/>
+    <property name="text.type" value="varchar(32672)" dbms="h2"/>
+
+    <!-- Include all change sets -->
+    <include file="changes/001-create-reporting-tables.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

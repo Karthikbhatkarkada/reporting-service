@@ -1,0 +1,37 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "application\\.properties"
+      },
+      {
+        "pattern": "application\\.yml"
+      },
+      {
+        "pattern": "application\\.yaml"
+      },
+      {
+        "pattern": "META-INF/services/.*"
+      },
+      {
+        "pattern": "META-INF/persistence\\.xml"
+      },
+      {
+        "pattern": "db/migration/.*"
+      },
+      {
+        "pattern": "db/changelog/.*"
+      },
+      {
+        "pattern": "routes/.*\\.xml"
+      },
+      {
+        "pattern": "config/.*"
+      },
+      {
+        "pattern": ".*\\.conf"
+      }
+    ]
+  },
+  "bundles": []
+}

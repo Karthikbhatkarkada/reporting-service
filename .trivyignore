@@ -1,0 +1,19 @@
+# Trivy vulnerability scanner ignore list
+# Format: <vulnerability_id1>
+# Example: CVE-2021-44228
+
+# Temporarily ignored vulnerabilities (to be fixed in future updates)
+CVE-2023-21930 # JDK vulnerability, waiting for upstream fix
+CVE-2023-44487 # HTTP/2 rapid reset vulnerability in many Java frameworks
+
+# False positives
+CVE-2016-1000027 # Spring Framework vulnerability that doesn't affect this usage
+
+# Low severity issues that don't affect this application
+CVE-2023-2976 # Low severity issue in commons-compress, not exploitable in this context
+
+# Dependencies that can't be updated yet due to compatibility issues
+CVE-2020-36518 # jackson-databind vulnerability, needs coordination with Quarkus update
+
+# Add new exclusions below with expiration date and justification
+# CVE-2023-XXXXX # Expires: 2023-12-31 - Justification for temporary exclusion

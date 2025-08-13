@@ -1,0 +1,14 @@
+[
+  {
+    "name": "java.util.ArrayList"
+  },
+  {
+    "name": "java.util.LinkedHashMap"
+  },
+  {
+    "name": "java.util.HashMap"
+  },
+  {
+    "name": "com.styra.platform.common.dto.ApiResponse"
+  }
+]

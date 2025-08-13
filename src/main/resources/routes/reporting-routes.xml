@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://camel.apache.org/schema/spring 
+        https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!-- Simple health check endpoint -->
+    <route id="reporting-health-check">
+        <from uri="rest:get:/api/v1/reports/health?consumes=application/json&amp;produces=application/json"/>
+        <setBody>
+            <simple>{"status": "OK", "service": "reporting-service", "timestamp": "${date:now:yyyy-MM-dd HH:mm:ss}"}</simple>
+        </setBody>
+        <setHeader name="Content-Type">
+            <constant>application/json</constant>
+        </setHeader>
+    </route>
+
+    <!-- Simple reports list endpoint -->
+    <route id="reports-list">
+        <from uri="rest:get:/api/v1/reports?consumes=application/json&amp;produces=application/json"/>
+        <setBody>
+            <simple>{"message": "Reports endpoint working", "service": "reporting-service"}</simple>
+        </setBody>
+        <setHeader name="Content-Type">
+            <constant>application/json</constant>
+        </setHeader>
+    </route>
+
+    <!-- Simple timer-based route for background processing -->
+    <route id="report-timer">
+        <from uri="timer:report-processing?period=60000"/>
+        <log message="Reporting service timer tick: ${date:now:yyyy-MM-dd HH:mm:ss}"/>
+    </route>
+
+</routes>

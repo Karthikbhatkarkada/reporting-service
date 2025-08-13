@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- False Positives -->
+    <suppress>
+        <notes>False positive for Jackson CVE that applies to web services, not relevant for our usage</notes>
+        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson-databind@.*$</packageUrl>
+        <cve>CVE-2020-36518</cve>
+    </suppress>
+
+    <!-- Temporary Suppression for Quarkus Issues -->
+    <suppress until="2023-12-31">
+        <notes>Temporary suppression until next Quarkus release with fix</notes>
+        <packageUrl regex="true">^pkg:maven/io\.quarkus/quarkus-core@.*$</packageUrl>
+        <cve>CVE-2023-4853</cve>
+    </suppress>
+
+    <!-- Issues in Test Dependencies -->
+    <suppress>
+        <notes>This affects only test code, not production</notes>
+        <packageUrl regex="true">^pkg:maven/org\.mockito/mockito-.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes>This affects only test code, not production</notes>
+        <packageUrl regex="true">^pkg:maven/org\.testcontainers/.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- H2 Database - only used in tests -->
+    <suppress>
+        <notes>H2 is only used for testing</notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+
+    <!-- Third-party Dependencies with known issues that don't affect our usage -->
+    <suppress>
+        <notes>This vulnerability in Netty doesn't affect our application's usage pattern</notes>
+        <packageUrl regex="true">^pkg:maven/io\.netty/netty-handler@.*$</packageUrl>
+        <cve>CVE-2023-1962</cve>
+    </suppress>
+    <suppress>
+        <notes>This vulnerability in Logback only applies to JMS appender which we don't use</notes>
+        <packageUrl regex="true">^pkg:maven/ch\.qos\.logback/logback-classic@.*$</packageUrl>
+        <cve>CVE-2023-6378</cve>
+    </suppress>
+
+    <!-- Suppressing Vulnerabilities fixed in newer versions of dependencies but cannot be updated yet due to compatibility issues -->
+    <suppress until="2024-01-31">
+        <notes>Fixed in newer versions but waiting for compatibility with Quarkus</notes>
+        <packageUrl regex="true">^pkg:maven/io\.smallrye/smallrye-.*$</packageUrl>
+        <cve>CVE-2023-39410</cve>
+    </suppress>
+
+    <!-- Example of Suppression for specific SHA1 checksum -->
+    <!--
+    <suppress>
+        <notes>Suppress a specific checksum</notes>
+        <sha1>5da4958ab753937492e720933c6bc4c3ccd5a9a4</sha1>
+        <cve>CVE-2023-XXXXX</cve>
+    </suppress>
+    -->
+</suppressions>

@@ -1,0 +1,276 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly security scans at 2 AM on Mondays
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: microservice_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7.0
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: s3
+        ports:
+          - 4566:4566
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+          pre-commit install-hooks
+      
+      - name: Maven Build
+        run: mvn -B clean verify
+      
+      - name: Run Tests with Coverage
+        run: mvn -B test jacoco:report
+      
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: target/surefire-reports
+      
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+      
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: microservice-jar
+          path: target/quarkus-app
+
+  sonar-analysis:
+    name: SonarQube Analysis
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: SonarQube Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=microservice-template \
+          -Dsonar.organization=my-organization \
+          -Dsonar.qualitygate.wait=true
+      
+      - name: Quality Checks
+        run: mvn -B checkstyle:check pmd:check spotbugs:check
+
+  security-scan:
+    name: Security Scan
+    needs: sonar-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check
+      
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
+      
+      - name: Check for secrets in code
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  docker-build:
+    name: Build Docker Image
+    needs: [build-and-test, security-scan]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: myorg/microservice-template
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,format=short
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=myorg/microservice-template:buildcache
+          cache-to: type=registry,ref=myorg/microservice-template:buildcache,mode=max
+      
+      - name: Scan Docker image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  native-build:
+    name: Native Build
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          version: '22.3.0'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build Native Image
+        run: |
+          mvn -B package -Pnative -DskipTests
+      
+      - name: Upload Native Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: native-image
+          path: target/*-runner
+
+  deploy-dev:
+    name: Deploy to Development
+    needs: [docker-build, sonar-analysis]
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev-api.example.com
+    
+    steps:
+      - name: Deploy to Development Environment
+        run: |
+          echo "Deploying to Development Environment"
+          # Add deployment steps here
+      
+      - name: Verify Deployment Health
+        run: |
+          echo "Verifying deployment health"
+          # Add health check verification here
+      
+      - name: Run Integration Tests Against Deployment
+        run: |
+          echo "Running integration tests against deployed environment"
+          # Add integration test commands here
+
+  deploy-prod:
+    name: Deploy to Production
+    needs: [docker-build, sonar-analysis, native-build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://api.example.com
+    
+    steps:
+      - name: Deploy to Production Environment
+        run: |
+          echo "Deploying to Production Environment"
+          # Add deployment steps here
+      
+      - name: Verify Production Deployment
+        run: |
+          echo "Verifying production deployment"
+          # Add production verification here
+      
+      - name: Run Smoke Tests
+        run: |
+          echo "Running smoke tests against production"
+          # Add smoke test commands here
+      
+      - name: Monitor Deployment Metrics
+        run: |
+          echo "Monitoring deployment metrics"
+          # Add monitoring commands here

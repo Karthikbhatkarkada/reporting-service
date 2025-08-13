@@ -1,0 +1,11 @@
+[
+  {
+    "interfaces": ["jakarta.ws.rs.client.ClientRequestFilter"]
+  },
+  {
+    "interfaces": ["jakarta.ws.rs.client.ClientResponseFilter"]
+  },
+  {
+    "interfaces": ["org.eclipse.microprofile.rest.client.RestClientBuilder"]
+  }
+]
